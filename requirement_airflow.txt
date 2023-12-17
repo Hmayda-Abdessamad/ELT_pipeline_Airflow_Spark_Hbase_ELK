@@ -1,0 +1,5 @@
+yfinance
+happybase
+apache-airflow
+apache-airflow-providers-apache-spark
+pyspark

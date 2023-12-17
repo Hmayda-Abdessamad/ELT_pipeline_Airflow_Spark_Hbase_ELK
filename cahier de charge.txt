@@ -1,0 +1,28 @@
+
+----title : 
+Automatisation d’un pipeline Big Data de visualisation de données en utilisant Apache Airflow et ELK Stack
+
+
+-----description :
+
+Mise en place d’une pipeline en utilisant Airflow :
+
+o Utiliser une API (Yahoo finance API) (done)
+
+o Utiliser un scheduler pour définir un intervalle
+d’exécution (done)
+
+o Les données collectées doivent être stockées dans
+Hbase ( en cours )
+
+o Utiliser Spark SQL pour accéder et traiter ces données
+
+o Ajouter quelques indicateurs techniques au nouveau
+dataset (RSI, MACD, MA, ADX, …)
+
+o Stocker ces données traitées sur ElasticSearch
+
+- Utiliser Kibana pour la visualisation
+
+o Accéder à elasticsearch en utilisant Spark
+o Utiliser 4 visualisations de votre choix 

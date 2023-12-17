@@ -1,0 +1,5 @@
+FROM bitnami/spark:latest
+
+COPY spark_requirement.txt /spark_requirement.txt
+
+RUN pip3 install --no-cache-dir -r /spark_requirement.txt

@@ -1,0 +1,107 @@
+version: '3'
+
+x-spark-common: &spark-common
+  image: bitnami/spark:latest
+  build:
+    context: .
+    dockerfile: Dockerfile_spark
+  volumes:
+    - ./jobs:/opt/bitnami/spark/jobs
+  networks:
+    - ELT
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  env_file:
+    - airflow.env
+  volumes:
+    - ./jobs:/opt/airflow/jobs
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+  depends_on:
+    - postgres
+  networks:
+    - ELT
+
+services:
+
+  spark-master:
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "8081:8080"
+      - "7077:7077"
+
+  spark-worker-1:
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_MASTER_URL: spark://spark-master:7077
+
+  spark-worker-2:
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_MASTER_URL: spark://spark-master:7077
+
+  spark-worker-3:
+
+
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_MASTER_URL: spark://spark-master:7077
+
+
+  postgres:
+    image: postgres:14.0
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    networks:
+      - ELT
+
+  webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      - scheduler
+    restart: on-failure
+
+  scheduler:
+    <<: *airflow-common
+    command: bash -c "airflow db migrate && airflow users create --username admin --firstname Yusuf --lastname Ganiyu --role Admin --email airscholar@gmail.com --password admin && airflow scheduler"
+
+  Hbase:  
+    image: dajobe/hbase  
+    container_name: Hbase
+    ports: [16010:16010,8085:8085]
+    volumes:
+      - ./create_tables_script.sh:/create_tables_script.sh  # Mount the script file
+    restart: always
+    command: ["hbase", "thrift", "start"]
+    networks:
+      - ELT
+    
+networks:
+  ELT:
