@@ -1,0 +1,5 @@
+
+#acces cassanndra cqlsh from ur localhost avec running the docker compoer
+docker exec -it cassandra cqlsh -u cassandra -p cassandra localhost 9042
+# describe a table(Low) in a keyspace(historical_data) 
+describe historical_data.Low;

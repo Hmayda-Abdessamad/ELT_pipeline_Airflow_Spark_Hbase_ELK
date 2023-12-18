@@ -13,7 +13,7 @@ o Utiliser un scheduler pour définir un intervalle
 d’exécution (done)
 
 o Les données collectées doivent être stockées dans
-Hbase ( en cours )
+Hbase ( done )
 
 o Utiliser Spark SQL pour accéder et traiter ces données
 

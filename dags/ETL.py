@@ -19,7 +19,7 @@ args = {
 
     'owner': 'HMAYDA',
     'depends_on_past': False,
-    'start_date': datetime(2023, 11, 1),
+    'start_date': datetime(2019, 1, 1),
     'email': ['abdoessamadhmayda@gmail.com'],
     'timezone': system_timezone,
     'email_on_failure': True,
@@ -37,10 +37,8 @@ start = PythonOperator(
 )
 
 
-
-
 python_job = SparkSubmitOperator(
-    task_id="python_job",
+    task_id="Historical_data",
     conn_id="spark-conn",
     application="jobs/python/historical_data.py",
     dag=dag

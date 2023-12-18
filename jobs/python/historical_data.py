@@ -1,48 +1,56 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, explode
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType
 import happybase
-import Yahoo_data
+import Utils
+import Yahoo
 
 
-# Initialize Spark session
-spark = SparkSession.builder.appName("Historical_data").getOrCreate()
+df=Yahoo.HistoricalData()
+print(df.columns)
 
-# get data historical
-df=Yahoo_data.HistoricalData()
-df=df.reset_index()
-df=spark.createDataFrame(df)
-#print(df.show())
+def write_to_hbase(row,table_name,cf):
+    # Create a connection to HBase
+    connection = happybase.Connection("hbase")
 
-df.createOrReplaceTempView("historical_data")
+    # Check if the table and column family exist, create them if not
+    Utils.create_hbase_table_if_not_exist(connection, table_name, cf)
 
+    # Open the table
+    table = connection.table(table_name)
 
-shape_df = spark.sql("SELECT * FROM historical_data")
+    # Extract values from the row
+    values = {
+	f"{cf}:#": row['#'],
+        f"{cf}:Name": row['Name'],
+        f"{cf}:Price": row['Price'],
+	f"{cf}:24H CHANGE": row['24H CHANGE'],
+        f"{cf}:24H VOLUME": row['24H VOLUME'],
+        f"{cf}:Market Cap": row['Market Cap'],
+        f"{cf}:timestamp": row['timestamp'],
+        # Add other columns as needed
+    }
 
+    # Write data to HBase
+    table.put(row['#'].encode(), values)
 
-#print(shape_df.show())
-
-# Perform Spark SQL query to select data with ticker column
-#result = spark.sql("SELECT *, Ticker FROM stock_data")
-
-# Show the resulting DataFrame
-#result.show()
-
-
-
-
-def connect_to_hbase():
-    # Define the connection settings
-    hbase_host = 'localhost'  # This is the service name from the docker-compose.yml file
-    hbase_port = 9090  # Port for HBase
-    connection = happybase.Connection(host=hbase_host,port=9090,autoconnect=True)
-    def fetch_table():
-            return connection.tables()
-    fetch_table()
+    # Close the connection
     connection.close()
-    
 
-    
+if __name__ == "__main__":
 
-# Call the function to execute the HBase operations
-connect_to_hbase()
+    # Create a Spark session
+    spark = Utils.create_spark_connection()
+    connection = Utils.create_hbase_connection()
+    column_families = ['Open', 'Close', 'High', 'Low', 'Volume']
+    Utils.create_hbase_table_if_not_exist(connection,"historical_data",column_families)
+    print("table created")
+  
+  
+            
+        
 
+
+   
+  
 

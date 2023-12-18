@@ -1,35 +1,24 @@
-from pyspark.sql import SparkSession
 import yfinance as yf
 import pandas as pd
-# Initialize Spark session
-#spark = SparkSession.builder.appName("Historical_data").getOrCreate()
-
 
 tickers = ["aapl", "goog", "amzn", "msft", "BA"]
 
-def FundamentalsData():
 
-    tickers_data = {}  # empty dictionary
-    combined_data=pd.DataFrame()
-    for ticker in tickers:
-        ticker_object = yf.Ticker(ticker)
-        # convert info() output from dictionary to dataframe
-        temp = pd.DataFrame.from_dict(ticker_object.info, orient="index")
-        temp.reset_index(inplace=True)
-        temp.columns = ["Attribute", "Recent"]
-
-        # add (ticker, dataframe) to main dictionary
-        tickers_data[ticker] = temp
-        combined_data = pd.concat(tickers_data)
-        combined_data = combined_data.reset_index()
-        del combined_data["level_1"]  # clean up unnecessary column
-        combined_data.columns = ["Ticker", "Attribute", "Recent"]  # update column names
-    return  combined_data
 # for one year
 def HistoricalData():
     # get historical data for all of this tickers at once
     data = yf.download("AMZN AAPL GOOG MSFT BA", period="1y", interval="1d")
     return data
+print(HistoricalData())
+
+
+
+
+
+
+
+
+
 
 def get_actions(tickers=tickers):
 
@@ -70,6 +59,24 @@ def get_info(dataframe) :
                        })
     return stock_info
 
+def FundamentalsData():
+
+    tickers_data = {}  # empty dictionary
+    combined_data=pd.DataFrame()
+    for ticker in tickers:
+        ticker_object = yf.Ticker(ticker)
+        # convert info() output from dictionary to dataframe
+        temp = pd.DataFrame.from_dict(ticker_object.info, orient="index")
+        temp.reset_index(inplace=True)
+        temp.columns = ["Attribute", "Recent"]
+
+        # add (ticker, dataframe) to main dictionary
+        tickers_data[ticker] = temp
+        combined_data = pd.concat(tickers_data)
+        combined_data = combined_data.reset_index()
+        del combined_data["level_1"]  # clean up unnecessary column
+        combined_data.columns = ["Ticker", "Attribute", "Recent"]  # update column names
+    return  combined_data
 
 
 

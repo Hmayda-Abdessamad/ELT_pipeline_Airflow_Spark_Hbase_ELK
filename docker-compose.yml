@@ -30,6 +30,8 @@ services:
   spark-master:
     <<: *spark-common
     command: bin/spark-class org.apache.spark.deploy.master.Master
+    container_name: spark-master
+    hostname: spark-master
     ports:
       - "8081:8080"
       - "7077:7077"
@@ -37,6 +39,8 @@ services:
   spark-worker-1:
     <<: *spark-common
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    container_name: spark-worker-1
+    hostname: spark-worker-1
     depends_on:
       - spark-master
     environment:
@@ -48,6 +52,8 @@ services:
   spark-worker-2:
     <<: *spark-common
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    container_name: spark-worker-2
+    hostname: spark-worker-2
     depends_on:
       - spark-master
     environment:
@@ -57,10 +63,10 @@ services:
       SPARK_MASTER_URL: spark://spark-master:7077
 
   spark-worker-3:
-
-
     <<: *spark-common
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    container_name: spark-worker-3
+    hostname: spark-worker-3
     depends_on:
       - spark-master
     environment:
@@ -69,9 +75,10 @@ services:
       SPARK_WORKER_MEMORY: 2g
       SPARK_MASTER_URL: spark://spark-master:7077
 
-
   postgres:
     image: postgres:14.0
+    container_name: postgres
+    hostname: postgres
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
@@ -82,6 +89,8 @@ services:
   webserver:
     <<: *airflow-common
     command: webserver
+    container_name: airflow-web-server
+    hostname: webserver
     ports:
       - "8080:8080"
     depends_on:
@@ -90,18 +99,34 @@ services:
 
   scheduler:
     <<: *airflow-common
+    container_name: airflow-scheduler
+    hostname: scheduler
     command: bash -c "airflow db migrate && airflow users create --username admin --firstname Yusuf --lastname Ganiyu --role Admin --email airscholar@gmail.com --password admin && airflow scheduler"
 
-  Hbase:  
-    image: dajobe/hbase  
-    container_name: Hbase
-    ports: [16010:16010,8085:8085]
-    volumes:
-      - ./create_tables_script.sh:/create_tables_script.sh  # Mount the script file
-    restart: always
-    command: ["hbase", "thrift", "start"]
+  hbase:
+
+    image: dajobe/hbase:latest
+    container_name: hbase
+    hostname: hbase
+    environment:
+      - HBASE_DATA_DIR=/data
+      - HBASE_ROOTDIR=/hbase
+
+    ports:
+        - '16010:16010'
+        - '9095:9095'
+        - '8085:8085'
     networks:
-      - ELT
-    
-networks:
+        - ELT
+    restart: unless-stopped
+
+  
+
+
+networks: 
   ELT:
+
+
+
+
+ 
