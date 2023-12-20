@@ -9,15 +9,6 @@ def HistoricalData():
     # get historical data for all of this tickers at once
     data = yf.download("AMZN AAPL GOOG MSFT BA", period="1y", interval="1d")
     return data
-print(HistoricalData())
-
-
-
-
-
-
-
-
 
 
 def get_actions(tickers=tickers):
