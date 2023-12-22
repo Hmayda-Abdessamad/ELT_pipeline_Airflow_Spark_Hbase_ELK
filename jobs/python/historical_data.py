@@ -17,7 +17,7 @@ column_families_str= [str(value) for value in column_families]
 if __name__ == "__main__":
 
     # Create a Spark session
-    spark = Utils.create_spark_connection()
+    spark = Utils.create_spark_connection(appName="historical_data")
     connection = Utils.create_hbase_connection()
     Utils.create_hbase_table_if_not_exist(connection,"historical_data",column_families_dict)
     Utils.insert_historical_data(connection,'historical_data')

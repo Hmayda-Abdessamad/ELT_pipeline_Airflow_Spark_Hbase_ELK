@@ -37,10 +37,24 @@ start = PythonOperator(
 )
 
 
-python_job = SparkSubmitOperator(
+historical_data = SparkSubmitOperator(
     task_id="Historical_data",
     conn_id="spark-conn",
     application="jobs/python/historical_data.py",
+    dag=dag
+)
+
+shares_data = SparkSubmitOperator(
+    task_id="shares_data",
+    conn_id="spark-conn",
+    application="jobs/python/shares_data.py",
+    dag=dag
+)
+
+income_statement = SparkSubmitOperator(
+    task_id="income_statement",
+    conn_id="spark-conn",
+    application="jobs/python/income_statement.py",
     dag=dag
 )
 
@@ -50,4 +64,4 @@ end = PythonOperator(
     dag=dag
 )
 
-start >> python_job >> end
+start >> [historical_data,shares_data,income_statement] >> end

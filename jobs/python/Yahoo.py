@@ -11,35 +11,46 @@ def HistoricalData():
     return data
 
 
-def get_actions(tickers=tickers):
+def get_shares_full(tickers=tickers):
+    all_shares=pd.DataFrame()
+    for item in tickers:
+        ticker = yf.Ticker(item)
+        shares_count = ticker.get_shares_full()
+        # Transpose DataFrame to make the timestamp index as a column
+        shares_count = shares_count.T.reset_index()
+        # Assign columns names
+        shares_count.columns = ['Date', 'Value']
+        shares_count['Ticker'] = item.upper()
+        all_shares = pd.concat([all_shares, shares_count])
+     
+    return all_shares
+def get_income_statements_common_columns(tickers=tickers):
+    common_columns = None
 
-    all_actions = pd.DataFrame()
     for ticker in tickers:
         stock = yf.Ticker(ticker)
-        actions = stock.actions
-        actions['Ticker'] = ticker.upper()  # Adding a column for ticker symbol
-        all_actions = pd.concat([all_actions, actions])
+        income_statements = stock.income_stmt
+        income_statements = income_statements.transpose()
+        income_statements.reset_index(inplace=True)
+        income_statements.rename(columns={'index': 'Date'}, inplace=True)
+        income_statements["Ticker"] = ticker
 
-    return all_actions
+        # Si c'est la première itération, définir les colonnes communes
+        if common_columns is None:
+            common_columns = set(income_statements.columns)
+        else:
+            # Trouver les colonnes communes avec les itérations précédentes
+            common_columns &= set(income_statements.columns)
 
-def get_balance_sheets(tickers=tickers):
-    all_balance_sheets = pd.DataFrame()
-    for ticker in tickers:
-        stock = yf.Ticker(ticker)
-        balance_sheets = stock.balancesheet
-        balance_sheets['Ticker'] = ticker.upper()
-        all_balance_sheets = pd.concat([all_balance_sheets, balance_sheets])
-    all_balance_sheets.to_csv("all_balance_sheets.csv", index=False)  # Replace "all_balance_sheets.csv" with your desired filename
-    return all_balance_sheets
+   
 
-def get_quarterly_income_statements(tickers=tickers):
-    all_income_statements = pd.DataFrame()  # Initialize an empty DataFrame
-    for ticker in tickers:
-        stock = yf.Ticker(ticker)
-        income_statements = stock.quarterly_income_stmt
-        income_statements['Ticker'] = ticker.upper()  # Adding a column for ticker symbol
-        all_income_statements = pd.concat([all_income_statements, income_statements])
-    return all_income_statements
+    return list(common_columns)
+        
+
+  
+    
+
+    
 
 def get_info(dataframe) :
     stock_info = pd.DataFrame({

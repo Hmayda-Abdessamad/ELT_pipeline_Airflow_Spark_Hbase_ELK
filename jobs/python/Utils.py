@@ -2,14 +2,14 @@ import logging
 from pyspark.sql import SparkSession
 import happybase
 import Yahoo
+import yfinance as yf
 
 
-
-def create_spark_connection():
+def create_spark_connection(appName):
     s_conn=None
     # create spark conn here
     try:
-        s_conn=SparkSession.builder.appName("Historical_data").getOrCreate()
+        s_conn=SparkSession.builder.appName(appName).getOrCreate()
         s_conn.sparkContext.setLogLevel("ERROR")
         logging.info("Spark connection created succesfully")
     except Exception as e:
@@ -42,7 +42,7 @@ def create_hbase_table_if_not_exist(connection, table_name, column_families):
     except Exception as e:
         print(f"Error creating table: {e}")
  
-def insert_historical_data(connection, table_name):
+def insert_historical_data(connection, table_name="historical_data"):
     # Open the table
     table = connection.table(table_name)
 
@@ -119,4 +119,75 @@ def insert_historical_data(connection, table_name):
          #inserting data for Volume
         table.put(row_key,{column: value for column, value in data_dict_Volume.items()})
         
-    print( "Insertion done")
+    print( "historical data inserted ")
+
+def insert_shares_data(connection, table_name="shares_data"):
+
+    # Open the table
+    table = connection.table(table_name)
+
+    # get data
+    df = Yahoo.get_shares_full()  # Assuming this retrieves your DataFrame
+    
+    result_list = []
+    # Iterating over rows and storing values as lists with index
+    for  index,row in df.iterrows():
+        values_list = row.values.tolist()  # Convert row values to list
+        values_list[0] = values_list[0].strftime('%Y-%m-%d')
+        result_list.append(values_list)
+    
+    # inserting data
+    for row_data in result_list:
+        row_key = row_data[0].encode()  # Convert row key to bytes
+        data_dict= {
+            b'full_shares:Value': str(row_data[1]).encode(),  # Convert string to bytes
+            b'full_shares:Ticker': str(row_data[2]).encode(),  # Convert string to bytes
+        }
+         
+        # Inserting data for Adj Close into the table
+        table.put(row_key, {column: value for column, value in data_dict.items()})
+       
+        
+    print( "shares data inserted ")
+
+def insert_income_statement_data(connection, table_name="income_statement"):
+    tickers = ["aapl", "goog", "amzn", "msft", "BA"]
+
+    # Open the table
+    table = connection.table(table_name)
+
+    # Get common columns
+    columns = Yahoo.get_income_statements_common_columns()
+
+    result = []
+    # Get data for each ticker 
+    for ticker in tickers:
+        stock = yf.Ticker(ticker)
+        income_statements = stock.income_stmt
+        income_statements = income_statements.transpose()
+        income_statements.reset_index(inplace=True)
+        income_statements.rename(columns={'index': 'Date'}, inplace=True)
+        income_statements["Ticker"] = ticker
+        # Select only the columns present in the 'columns' list
+        income_statements_filtered = income_statements.loc[:, columns]
+        date_index = income_statements_filtered.columns.get_loc('Date')
+        ticker_index = income_statements_filtered.columns.get_loc('Ticker')
+
+        # Iterating over rows and storing values as lists with index
+        for index, row in income_statements_filtered.iterrows():
+            values_list = row.values.tolist()  # Convert row values to list
+            values_list[date_index] = values_list[date_index].strftime('%Y-%m-%d')  # Convert the date to a specific format
+            result.append(values_list)
+
+    # Inserting data
+    for row_data in result:
+        row_key = row_data[date_index].encode()  # Convert row key to bytes
+        data_dict = {
+            str((columns[i] + ":" + row_data[ticker_index])).encode(): str(row_data[i]).encode()
+            for i in range(len(columns))  # Iterate through all columns
+            if i != date_index and i != ticker_index  # Exclude 'Date' and 'Ticker' indexes from data_dict
+        }
+
+        table.put(row_key, {column: value for column, value in data_dict.items()})
+
+    print("Income statement data inserted")

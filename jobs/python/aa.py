@@ -1,17 +1,23 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, explode
-from pyspark.sql.types import StructType, StructField, StringType, ArrayType
-import happybase
-import Utils
+import yfinance as yf 
 import Yahoo
-import Utils
+tickers = ["aapl", "goog", "amzn", "msft", "BA"]
+    
 
 
-df = Yahoo.HistoricalData()  # Assuming this retrieves some data or initializes DataFrame
-column_families = df.columns.levels[1]
+    # get common cols
+columns=Yahoo.get_income_statements_common_columns()
 
-# Generating families list using the elements from column_families
-families = [str(value) for value in column_families]
+print(columns[1])
 
-print(df.shape)
-
+result=[]
+    # get data for each ticker 
+for ticker in tickers:
+    stock = yf.Ticker(ticker)
+    income_statements = stock.income_stmt
+    income_statements = income_statements.transpose()
+    income_statements.reset_index(inplace=True)
+    income_statements.rename(columns={'index': 'Date'}, inplace=True)
+    income_statements["Ticker"] = ticker
+        # Sélectionner uniquement les colonnes présentes dans la liste 'columns'
+    income_statements_filtered = income_statements.loc[:,columns]
+    print(income_statements_filtered.columns[1])
