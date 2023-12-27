@@ -1,19 +1,17 @@
-version: '3'
+version: '4'
 
 x-spark-common: &spark-common
-  image: bitnami/spark:latest
-  build:
-    context: .
-    dockerfile: Dockerfile_spark
+  image: spark:used
   volumes:
     - ./jobs:/opt/bitnami/spark/jobs
   networks:
     - ELT
 
 x-airflow-common: &airflow-common
-  build:
-    context: .
-    dockerfile: Dockerfile
+  image: airflow:used
+  environment:
+    - MAX_ACTIVE_TASKS_PER_DAG=20
+    - DAGS_ARE_PAUSED_AT_CREATION = false
   env_file:
     - airflow.env
   volumes:
@@ -45,8 +43,8 @@ services:
       - spark-master
     environment:
       SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
 
   spark-worker-2:
@@ -58,8 +56,8 @@ services:
       - spark-master
     environment:
       SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
 
   spark-worker-3:
@@ -120,6 +118,44 @@ services:
         - ELT
     restart: unless-stopped
 
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+    # 8.x
+    environment: ['CLI_JAVA_OPTS=-Xms2g -Xmx2g','bootstrap.memory_lock=true','discovery.type=single-node','xpack.security.enabled=false', 'xpack.security.enrollment.enabled=false']
+    ports:
+      - 9200:9200
+    networks:
+      - ELT
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    deploy:    
+      resources:
+          limits:
+            cpus: '2.0'
+          reservations:
+            cpus: '1.0'
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.1
+    container_name: kibana
+    environment:
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: d1a66dfd-c4d3-4a0a-8290-2abcb83ab3aa
+    ports:
+      - 5601:5601
+    networks:
+      - ELT
+    deploy:    
+      resources:
+          limits:
+            cpus: '2.0'
+          reservations:
+            cpus: '1.0'
   
 
 

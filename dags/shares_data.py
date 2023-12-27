@@ -19,7 +19,7 @@ args = {
 
     'owner': 'HMAYDA',
     'depends_on_past': False,
-    'start_date': datetime(2023, 1, 1),
+    'start_date': datetime(2023, 9, 1),
     'email': ['abdoessamadhmayda@gmail.com'],
     'timezone': system_timezone,
     'email_on_failure': True,
@@ -28,7 +28,7 @@ args = {
     'retry_delay': timedelta(minutes=2)
 }
 
-dag = DAG(  dag_id = "ELT_pipeliine",default_args=args, schedule_interval = "@monthly")
+dag = DAG(  dag_id = "shares_data",default_args=args, schedule_interval = "@monthly")
 
 start = PythonOperator(
     task_id="start",
@@ -37,26 +37,16 @@ start = PythonOperator(
 )
 
 
-historical_data = SparkSubmitOperator(
-    task_id="Historical_data",
-    conn_id="spark-conn",
-    application="jobs/python/historical_data.py",
-    dag=dag
-)
+
 
 shares_data = SparkSubmitOperator(
-    task_id="shares_data",
+    task_id="Get_shares_data",
     conn_id="spark-conn",
     application="jobs/python/shares_data.py",
     dag=dag
 )
 
-income_statement = SparkSubmitOperator(
-    task_id="income_statement",
-    conn_id="spark-conn",
-    application="jobs/python/income_statement.py",
-    dag=dag
-)
+
 
 end = PythonOperator(
     task_id="end",
@@ -64,4 +54,6 @@ end = PythonOperator(
     dag=dag
 )
 
-start >> [historical_data,shares_data,income_statement] >> end
+
+
+start>>shares_data>>end
