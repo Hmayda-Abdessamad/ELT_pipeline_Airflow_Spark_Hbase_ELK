@@ -34,6 +34,10 @@ docker-compose up
 3)-Access Airflow UI:
 After successful execution, navigate to localhost:8080 in your web browser to access the Airflow UI. Here, you can monitor and manage the automated big data visualization pipeline.
 
+
+#Architecture of the project
+![image](https://github.com/Hmayda-Abdessamad/ELT_pipeline_Airflow_Spark_Hbase_ELK/assets/110923887/6da8f0c9-c666-4370-a245-653740184197)
+=======
 # After running the project 
 
 To acces to  
@@ -55,6 +59,7 @@ Where you can create some visualisations
 
 ![image](https://github.com/kadirimeriem/ELT_pipeline_Airflow_Spark_Hbase_ELK/assets/110923887/219b9567-2576-41f2-b423-2a4dcfac5ad6)
 ![image](https://github.com/kadirimeriem/ELT_pipeline_Airflow_Spark_Hbase_ELK/assets/110923887/4581b831-6963-4e28-829f-800c190c71b5)
+
 
 
 
