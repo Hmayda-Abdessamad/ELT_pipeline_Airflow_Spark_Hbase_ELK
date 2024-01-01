@@ -1,14 +1,14 @@
 version: '4'
 
 x-spark-common: &spark-common
-  image: spark:used
+  image: hmaydaabdo/spark:latest
   volumes:
     - ./jobs:/opt/bitnami/spark/jobs
   networks:
     - ELT
 
 x-airflow-common: &airflow-common
-  image: airflow:used
+  image: hmaydaabdo/airflow:latest
   environment:
     - MAX_ACTIVE_TASKS_PER_DAG=20
     - DAGS_ARE_PAUSED_AT_CREATION = false
